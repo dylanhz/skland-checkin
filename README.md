@@ -1,2 +1,2 @@
 # skland_checkin
-skland auto check-in
+forked from https://gitee.com/FancyCabbage/skyland-auto-sign
