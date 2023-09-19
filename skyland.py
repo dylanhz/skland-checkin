@@ -1,10 +1,6 @@
-import json
 import os.path
-import time
-import logging
 import requests
 
-from datetime import date
 
 app_code = "4ca99fa6b56cc2ba"
 token_env = os.environ.get("TOKEN")
@@ -31,57 +27,6 @@ sign_url = "https://zonai.skland.com/api/v1/game/attendance"
 binding_url = "https://zonai.skland.com/api/v1/game/player/binding"
 grant_code_url = "https://as.hypergryph.com/user/oauth2/v2/grant"
 cred_code_url = "https://zonai.skland.com/api/v1/user/auth/generate_cred_by_code"
-
-
-def config_logger():
-    current_date = date.today().strftime("%Y-%m-%d")
-    if not os.path.exists("logs"):
-        os.mkdir("logs")
-    logger = logging.getLogger()
-
-    file_handler = logging.FileHandler(f"./logs/{current_date}.log", encoding="utf-8")
-    logger.addHandler(file_handler)
-    logging.getLogger().setLevel(logging.DEBUG)
-    file_handler.setLevel(logging.INFO)
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
-    file_handler.setFormatter(formatter)
-
-    def filter_code(text):
-        filter_key = ["code", "cred", "token"]
-        try:
-            j = json.loads(text)
-            if not j.get("data"):
-                return text
-            data = j["data"]
-            for i in filter_key:
-                if i in data:
-                    data[i] = "*****"
-            return json.dumps(j, ensure_ascii=False)
-        except:
-            return text
-
-    _get = requests.get
-    _post = requests.post
-
-    def get(*args, **kwargs):
-        response = _get(*args, **kwargs)
-        logger.info(
-            f"GET {args[0]} - {response.status_code} - {filter_code(response.text)}"
-        )
-        return response
-
-    def post(*args, **kwargs):
-        response = _post(*args, **kwargs)
-        logger.info(
-            f"POST {args[0]} - {response.status_code} - {filter_code(response.text)}"
-        )
-        return response
-
-    # 替换 requests 中的方法
-    requests.get = get
-    requests.post = post
 
 
 def get_cred_by_token(token):
@@ -143,7 +88,7 @@ def check_in(cred):
         for j in awards:
             res = j["resource"]
             print(
-                f'user {i.get("nickName")}({i.get("channelName")}) check-in succeed, get {res["name"]}x{j.get("count") or 1}'
+                f'{i.get("nickName")}({i.get("channelName")}) check-in succeed, get {res["name"]}x{j.get("count") or 1}'
             )
 
 
@@ -156,22 +101,13 @@ def get_token():
     return v
 
 
-def start():
+def run():
     token = get_token()
     for i in token:
         try:
             check_in(get_cred_by_token(i))
         except Exception as ex:
             print(f"check-in failed, reason: {str(ex)}")
-            logging.error("", exc_info=ex)
 
 
-config_logger()
-
-logging.info("=========starting==========")
-
-start_time = time.time()
-start()
-end_time = time.time()
-logging.info(f"complete with {(end_time - start_time) * 1000} ms")
-logging.info("==========ending===========")
+run()
