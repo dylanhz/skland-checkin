@@ -81,7 +81,7 @@ def check_in(cred):
         resp = requests.post(sign_url, headers=header, json=body).json()
         if resp["code"] != 0:
             print(
-                f'user {i.get("nickName")}({i.get("channelName")}) check-in failed, reason: {resp.get("message")}'
+                f'{i.get("nickName")}({i.get("channelName")}) check-in failed, reason: {resp.get("message")}'
             )
             continue
         awards = resp["data"]["awards"]
