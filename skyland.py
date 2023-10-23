@@ -1,4 +1,5 @@
-import os.path
+import os
+import logging
 import requests
 
 
@@ -31,7 +32,8 @@ cred_code_url = "https://zonai.skland.com/api/v1/user/auth/generate_cred_by_code
 
 def get_cred_by_token(token):
     grant_code = get_grant_code(token)
-    return get_cred(grant_code)
+    cred = get_cred(grant_code)
+    return cred
 
 
 def get_grant_code(token):
@@ -61,9 +63,9 @@ def get_binding_list():
     v = []
     resp = requests.get(binding_url, headers=header).json()
     if resp["code"] != 0:
-        print(f"requesting user list failed: {resp['message']}")
+        logging.warning(f"requesting user list failed: {resp['message']}")
         if resp.get("message") == "用户未登录":
-            print(f"login expired, rerun.")
+            logging.warning(f"login expired, rerun.")
             return []
     for i in resp["data"]["list"]:
         if i.get("appCode") != "arknights":
@@ -80,34 +82,33 @@ def check_in(cred):
         body = {"uid": i.get("uid"), "gameId": 1}
         resp = requests.post(sign_url, headers=header, json=body).json()
         if resp["code"] != 0:
-            print(
+            logging.info(
                 f'{i.get("nickName")}({i.get("channelName")}) check-in failed, reason: {resp.get("message")}'
             )
-            continue
-        awards = resp["data"]["awards"]
-        for j in awards:
-            res = j["resource"]
-            print(
-                f'{i.get("nickName")}({i.get("channelName")}) check-in succeed, get {res["name"]}x{j.get("count") or 1}'
-            )
-
-
-def get_token():
-    v = []
-    token_list = token_env.split(",")
-    for i in token_list:
-        v.append(i)
-    print(f"{len(v)} tokens read")
-    return v
+        else:
+            awards = resp["data"]["awards"]
+            for j in awards:
+                res = j["resource"]
+                logging.info(
+                    f'{i.get("nickName")}({i.get("channelName")}) check-in succeed, get {res["name"]} x {j.get("count") or 1}'
+                )
 
 
 def run():
-    token = get_token()
-    for i in token:
-        try:
-            check_in(get_cred_by_token(i))
-        except Exception as ex:
-            print(f"check-in failed, reason: {str(ex)}")
+    log_path = f"{os.path.dirname(__file__)}/skland.log"
+    logging.basicConfig(
+        filename=log_path,
+        filemode="a",
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        level=logging.INFO,
+        encoding="utf-8",
+    )
+
+    token = "hzZYlXyyQukMHfevjUjxB+Zk"
+    try:
+        check_in(get_cred_by_token(token))
+    except Exception as ex:
+        logging.error(f"check-in failed, reason: {str(ex)}")
 
 
 run()
