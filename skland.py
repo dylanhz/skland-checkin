@@ -1,10 +1,10 @@
 import os
+import sys
 import logging
 import requests
 
 
 app_code = "4ca99fa6b56cc2ba"
-token_env = os.environ.get("TOKEN")
 header = {
     "cred": "",
     "User-Agent": "Skland/1.0.1 (com.hypergryph.skland; build:100001014; Android 31; ) Okhttp/4.11.0",
@@ -94,7 +94,7 @@ def check_in(cred):
                 )
 
 
-def run():
+if __name__ == "__main__":
     log_path = f"{os.path.dirname(__file__)}/skland.log"
     logging.basicConfig(
         filename=log_path,
@@ -104,11 +104,8 @@ def run():
         encoding="utf-8",
     )
 
-    token = "hzZYlXyyQukMHfevjUjxB+Zk"
+    token = sys.argv[1]
     try:
         check_in(get_cred_by_token(token))
     except Exception as ex:
         logging.error(f"check-in failed, reason: {str(ex)}")
-
-
-run()
